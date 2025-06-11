@@ -1,0 +1,16 @@
+{
+    "name": "com.thissome1.colorful-hierarchy",
+    "version": "1.1.0",
+    "displayName": "Colorful Hierarchy",
+    "description": "Paints your gameObject window with colorful folders. easy access, removed in build, can be removed in play mode too for testing and such.",
+    "unity": "6000.0",
+    "unityRelease": "24f1",
+    "keywords": [
+        "EditorTools",
+        "HierarchyFolder"
+    ],
+    "author": {
+        "name": "ThisSome1",
+        "email": "h.behroozib4u@gmail.com"
+    }
+}
