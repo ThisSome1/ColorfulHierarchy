@@ -1,3 +1,10 @@
+version: 1.2
+
+    Fixed custom folder structure couldn't be added in the inspector.
+    You can now save folder structures created in the hierarchy to use later.
+    Fixed the serialization depth limit warning.
+    Improved the Folder Structure window.
+
 version: 1.1
 
     Added custom folder structure creation.

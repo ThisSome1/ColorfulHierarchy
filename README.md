@@ -1,4 +1,4 @@
-version: 1.1
+** Best way to beautify and clean up your hierarchy window. Easy to use. and so much more...**
 
 To use colored folder, you can simply rename any GameObject to follow bellow pattern,
 and it automatically turns into a ColoredFolder. Or adding it from GameObject menu at GameObject/ThisSome1/Colored Folder.

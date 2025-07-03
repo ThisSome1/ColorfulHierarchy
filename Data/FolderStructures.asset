@@ -13,3 +13,6 @@ MonoBehaviour:
   m_Name: FolderStructures
   m_EditorClassIdentifier: 
   Structures: []
+  references:
+    version: 2
+    RefIds: []

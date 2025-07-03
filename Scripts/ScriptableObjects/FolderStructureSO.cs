@@ -1,4 +1,5 @@
 #if UNITY_EDITOR
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 using System;
@@ -7,7 +8,7 @@ namespace ThisSome1.ColorfulHierarchy
 {
     internal class FolderStructureSO : ScriptableObject
     {
-        [SerializeField] internal FolderStructure[] Structures;
+        [SerializeField] internal List<FolderStructure> Structures = new();
         public static string GetDataPath
         {
             get
@@ -41,25 +42,11 @@ namespace ThisSome1.ColorfulHierarchy
 
                 string path = AssetDatabase.GUIDToAssetPath(asset);
                 path = path[..path.LastIndexOf('/')];
+                path = path[..path.LastIndexOf('/')];
                 path = path[..path.LastIndexOf('/')] + "/Data/FolderStructures.asset";
                 return path;
             }
         }
-    }
-
-    [Serializable]
-    internal class FolderStructure
-    {
-        [SerializeField] internal string Title = "new structure";
-        [SerializeField] internal FolderData[] Folders;
-    }
-
-    [Serializable]
-    internal class FolderData
-    {
-        [SerializeField] internal string Name = "new folder";
-        [SerializeField] internal FolderDesign Design = new();
-        [SerializeField] internal FolderData[] SubFolders;
     }
 }
 #endif
