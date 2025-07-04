@@ -1,5 +1,5 @@
-.gitignore.meta
 LICENSE.meta
 README.md.meta
-ChangeLog.txt.meta
+.gitignore.meta
+CHANGELOG.md.meta
 package.json.meta
