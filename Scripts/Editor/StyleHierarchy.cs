@@ -34,16 +34,22 @@ namespace ThisSome1.ColorfulHierarchy
 
                 if (thisGO.transform.localPosition != Vector3.zero || thisGO.transform.localRotation != Quaternion.identity || thisGO.transform.localScale != Vector3.one)
                 {
+                    List<(Vector3 pos, Quaternion rot)> targetTransform = new();
+                    foreach (Transform child in thisGO.transform)
+                        targetTransform.Add((child.position, child.rotation));
+
+                    Vector3 prevScale = thisGO.transform.localScale;
                     Undo.RecordObject(thisGO.transform, "Reset Folder Transform");
+                    thisGO.transform.SetLocalPositionAndRotation(new(0, 0, 0), Quaternion.identity);
+                    thisGO.transform.localScale = new(1, 1, 1);
+
                     foreach (Transform child in thisGO.transform)
                     {
                         Undo.RecordObject(child, "Reset Folder Transform");
-                        child.localPosition += thisGO.transform.localPosition;
-                        child.localRotation *= thisGO.transform.localRotation;
-                        child.localScale.Scale(thisGO.transform.localScale);
+                        child.SetPositionAndRotation(targetTransform[0].pos, targetTransform[0].rot);
+                        child.localScale = new Vector3(child.localScale.x * prevScale.x, child.localScale.y * prevScale.y, child.localScale.z * prevScale.z);
+                        targetTransform.RemoveAt(0);
                     }
-                    thisGO.transform.SetLocalPositionAndRotation(new(0, 0, 0), Quaternion.identity);
-                    thisGO.transform.localScale = new(1, 1, 1);
                 }
 
                 foreach (Component c in thisGO.GetComponents<Component>())
