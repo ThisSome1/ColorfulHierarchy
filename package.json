@@ -1,6 +1,6 @@
 {
     "name": "com.thissome1.colorful-hierarchy",
-    "version": "1.3.0",
+    "version": "1.3.1",
     "displayName": "Colorful Hierarchy",
     "description": "Paints your gameObject window with colorful folders. easy access, removed in build, can be removed in play mode too for testing and such.",
     "unity": "6000.0",
