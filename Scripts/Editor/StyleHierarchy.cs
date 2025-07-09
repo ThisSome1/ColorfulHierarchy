@@ -14,7 +14,7 @@ namespace ThisSome1.ColorfulHierarchy
             // Check if the color palette asset is importing.
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindow;
 
-            // Create the PalapalHelper if needed
+            // Create the PalapalHelper if needed.
             EditorApplication.delayCall += CreatePalapalHelper;
         }
 
@@ -175,10 +175,9 @@ namespace ThisSome1.ColorfulHierarchy
                         folders.Push((ccd, depth + 1));
             }
 
-            FolderStructureSO savedStructures = AssetDatabase.LoadAssetAtPath<FolderStructureSO>(FolderStructureWindow.DataPath);
-            savedStructures.Structures.Add(new FolderStructure() { Title = "Saved Structure", Folders = new List<FolderData>(structure) });
-            EditorUtility.SetDirty(savedStructures);
-            AssetDatabase.SaveAssetIfDirty(savedStructures);
+            SavedStructures.instance.Structures.Add(new FolderStructure() { Title = "Saved Structure", Folders = new List<FolderData>(structure) });
+            SavedStructures.Save();
+
             FolderStructureWindow.ShowWindow();
 
             Selection.activeGameObject = null;
@@ -205,12 +204,14 @@ namespace ThisSome1.ColorfulHierarchy
             dir = dir[..dir.LastIndexOf('/')];
             if (IsPalapalDefined() && !File.Exists(dir + "/PalapalHelper.cs"))
             {
-                File.WriteAllText(dir + "/PalapalHelper.cs", "#if UNITY_EDITOR\nusing UnityEditor;\n\nnamespace ThisSome1.ColorfulHierarchy\n{\n\tpublic class PalapalHelper\n\t{\n\t\t" +
-                                                             "[MenuItem(\"Palapal/ColorfulHierarchy/Folder Structures\")]\n\t\tpublic static void ShowWindow() => FolderStructureWindow.ShowWindow();\n\t}\n}\n#endif");
+                File.WriteAllText(dir + "/PalapalHelper.cs", "#if UNITY_EDITOR\nusing UnityEditor;\n\nnamespace ThisSome1.ColorfulHierarchy\n{\n\tpublic class PalapalHelper\n\t{" +
+                                                            "\n\t\t[MenuItem(\"Palapal/ColorfulHierarchy/Folder Structures\")]\n\t\tpublic static void ShowWindow() => FolderStructureWindow.ShowWindow();" +
+                                                            "\n\t\t[MenuItem(\"GameObject/Palpal/Colorful Hierarchy/Deploy Folder Structure\", true)]\n\t\tprivate static bool NoSelection() => Selection.count < 2;" +
+                                                            "\n\t\t[MenuItem(\"GameObject/Palpal/Colorful Hierarchy/Deploy Folder Structure\", false)]" +
+                                                            "\n\t\tprivate static void CreateFolderStructure() => SelectStructureWindow.ShowWindow();\n\t}\n}\n#endif");
+                File.WriteAllText(dir + "/PalapalHelper.cs.meta", "fileFormatVersion: 2\nguid: bca94c311fb50d545b36458bc460ca43");
 
-                var structures = AssetDatabase.LoadAssetAtPath<FolderStructureSO>(FolderStructureWindow.DataPath);
-                structures ??= FolderStructureWindow.CreateDataAsset();
-                structures.Structures.Add(new FolderStructure()
+                SavedStructures.instance.Structures.Add(new FolderStructure()
                 {
                     Title = "Palapal",
                     Folders = new List<FolderData>()
@@ -226,9 +227,7 @@ namespace ThisSome1.ColorfulHierarchy
                             new FolderData() { Name = "Gameplay", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(1, 0, 0) } },
                         }
                 });
-                EditorUtility.SetDirty(structures);
-                AssetDatabase.SaveAssetIfDirty(structures);
-                AssetDatabase.Refresh();
+                SavedStructures.Save();
             }
         }
     }
