@@ -1,5 +1,6 @@
 #if UNITY_EDITOR
 using System.Collections.Generic;
+using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using System.IO;
@@ -12,7 +13,12 @@ namespace ThisSome1.ColorfulHierarchy
         static StyleHierarchy()
         {
             // Check if the color palette asset is importing.
+            EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyWindow;
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindow;
+
+            // Handle undo and redo for saved structures.
+            Undo.undoRedoPerformed -= FolderStructureWindow.RepaintIfChanged;
+            Undo.undoRedoPerformed += FolderStructureWindow.RepaintIfChanged;
 
             // Create the PalapalHelper if needed.
             EditorApplication.delayCall += CreatePalapalHelper;
@@ -63,7 +69,7 @@ namespace ThisSome1.ColorfulHierarchy
                 FolderDesign design = cd.Settings;
 
                 // Create a new GUIStyle to match the design in colorDesigns list.
-                GUIStyle nameStyle = new GUIStyle()
+                var nameStyle = new GUIStyle()
                 {
                     fontSize = design.fontSize,
                     fontStyle = design.fontStyle,
@@ -176,8 +182,6 @@ namespace ThisSome1.ColorfulHierarchy
             }
 
             SavedStructures.instance.Structures.Add(new FolderStructure() { Title = "Saved Structure", Folders = new List<FolderData>(structure) });
-            SavedStructures.Save();
-
             FolderStructureWindow.ShowWindow();
 
             Selection.activeGameObject = null;
@@ -200,7 +204,25 @@ namespace ThisSome1.ColorfulHierarchy
                 return false;
             }
 
-            string dir = typeof(FolderStructureWindow).GetScriptPath();
+            var asset = "";
+            var guids = AssetDatabase.FindAssets($"{typeof(FolderStructureWindow).Name} t:Script");
+            if (guids.Length > 1)
+            {
+                foreach (var guid in guids)
+                {
+                    var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                    var filename = Path.GetFileNameWithoutExtension(assetPath);
+                    if (filename == typeof(FolderStructureWindow).Name)
+                    {
+                        asset = guid;
+                        break;
+                    }
+                }
+            }
+            else if (guids.Length == 1)
+                asset = guids[0];
+
+            string dir = AssetDatabase.GUIDToAssetPath(asset);
             dir = dir[..dir.LastIndexOf('/')];
             if (IsPalapalDefined() && !File.Exists(dir + "/PalapalHelper.cs"))
             {
@@ -209,25 +231,28 @@ namespace ThisSome1.ColorfulHierarchy
                                                             "\n\t\t[MenuItem(\"GameObject/Palpal/Colorful Hierarchy/Deploy Folder Structure\", true)]\n\t\tprivate static bool NoSelection() => Selection.count < 2;" +
                                                             "\n\t\t[MenuItem(\"GameObject/Palpal/Colorful Hierarchy/Deploy Folder Structure\", false)]" +
                                                             "\n\t\tprivate static void CreateFolderStructure() => SelectStructureWindow.ShowWindow();\n\t}\n}\n#endif");
-                File.WriteAllText(dir + "/PalapalHelper.cs.meta", "fileFormatVersion: 2\nguid: bca94c311fb50d545b36458bc460ca43");
+                File.WriteAllText(dir + "/PalapalHelper.cs.meta", $"fileFormatVersion: 2\nguid: {GUID.Generate()}");
 
-                SavedStructures.instance.Structures.Add(new FolderStructure()
+                if (!SavedStructures.instance.Structures.Any((structure) => structure.Title == "Palapal"))
                 {
-                    Title = "Palapal",
-                    Folders = new List<FolderData>()
+                    SavedStructures.instance.Structures.Add(new FolderStructure()
+                    {
+                        Title = "Palapal",
+                        Folders = new List<FolderData>()
                         {
-                            new FolderData() { Name = "Debug", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(0.5f, 0, 1) } },
-                            new FolderData() { Name = "Managers", Design = new FolderDesign(true) { textColor = Color.black, backgroundColor = new Color(1, 0.5f, 0) } },
-                            new FolderData() { Name = "UIs", Design = new FolderDesign(true) { textColor = Color.black, backgroundColor = new Color(0, 1, 1) } },
-                            new FolderData() { Name = "Player", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(0, 0, 1) } },
-                            new FolderData() { Name = "Lights", Design = new FolderDesign(true) { textColor = Color.black, backgroundColor = new Color(1, 1, 0) } },
-                            new FolderData() { Name = "VFXs", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(1, 0, 0.5f) } },
-                            new FolderData() { Name = "SFXs", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(0, 0.5f, 1) } },
-                            new FolderData() { Name = "Environment", Design = new FolderDesign(true) { textColor = Color.black, backgroundColor = new Color(0, 1, 0) } },
-                            new FolderData() { Name = "Gameplay", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(1, 0, 0) } },
+                            new() { Name = "Debug", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(0.5f, 0, 1) } },
+                            new() { Name = "Managers", Design = new FolderDesign(true) { textColor = Color.black, backgroundColor = new Color(1, 0.5f, 0) } },
+                            new() { Name = "UIs", Design = new FolderDesign(true) { textColor = Color.black, backgroundColor = new Color(0, 1, 1) } },
+                            new() { Name = "Player", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(0, 0, 1) } },
+                            new() { Name = "Lights", Design = new FolderDesign(true) { textColor = Color.black, backgroundColor = new Color(1, 1, 0) } },
+                            new() { Name = "VFXs", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(1, 0, 0.5f) } },
+                            new() { Name = "SFXs", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(0, 0.5f, 1) } },
+                            new() { Name = "Environment", Design = new FolderDesign(true) { textColor = Color.black, backgroundColor = new Color(0, 1, 0) } },
+                            new() { Name = "Gameplay", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(1, 0, 0) } },
                         }
-                });
-                SavedStructures.Save();
+                    });
+                    SavedStructures.SaveInPrefs();
+                }
             }
         }
     }

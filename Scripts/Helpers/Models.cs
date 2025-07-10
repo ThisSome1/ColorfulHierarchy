@@ -5,6 +5,12 @@ using System;
 namespace ThisSome1.ColorfulHierarchy
 {
     [Serializable]
+    internal struct StructureList
+    {
+        public FolderStructure[] Structures;
+    }
+
+    [Serializable]
     internal class FolderStructure
     {
         [SerializeField] internal string Title = "new structure";

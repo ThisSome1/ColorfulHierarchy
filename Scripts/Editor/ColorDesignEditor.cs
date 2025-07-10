@@ -24,17 +24,6 @@ namespace ThisSome1.ColorfulHierarchy
                 {
                     case "m_Script":
                         break;
-                    // case "Settings":
-                    //     EditorGUILayout.LabelField("Settings:");
-                    //     EditorGUI.indentLevel++;
-                    //     var folderDesigns = new List<FolderDesignSO>();
-                    //     foreach (var tgt in targets)
-                    //         folderDesigns.Add((tgt as ColorDesign).Settings);
-                    //     Editor editor = null;
-                    //     CreateCachedEditor(folderDesigns.ToArray(), null, ref editor);
-                    //     editor.OnInspectorGUI();
-                    //     EditorGUI.indentLevel--;
-                    //     break;
                     default:
                         EditorGUILayout.PropertyField(iterator);
                         break;
