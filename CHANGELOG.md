@@ -8,6 +8,12 @@
 ### Deprecated
 -->
 
+## [1.3.2] - 2025-07-17
+### Fixed
+- Fixed Undo/Redo bug (needed two undo/redos to undo/redo change)
+### Changed
+- Improved class and folder naming.
+
 ## [1.3.2] - 2025-07-10
 ### Added
 - Now saves structures in EditorPrefs.

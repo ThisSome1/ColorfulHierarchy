@@ -5,32 +5,34 @@ using UnityEngine;
 
 namespace ThisSome1.ColorfulHierarchy
 {
-    internal class SavedStructures : ScriptableSingleton<SavedStructures>
+    internal class ColorfulHierarchyEditorData : ScriptableSingleton<ColorfulHierarchyEditorData>
     {
-        const string PrefKey = "ThisSome1.ColorfulHierarchy.SavedStructures";
+        const string PrefKey = "ThisSome1.ColorfulHierarchy.Data", UndoPrefix = "ThisSome1.ColorfulHierarchy ";
         [SerializeField] private List<FolderStructure> _structures = null;
+        [SerializeField] private List<int> _selectedFolderPath = new();
 
-        internal List<FolderStructure> Structures
+        internal static List<int> SelectedFolderPath { get => instance._selectedFolderPath; set => instance._selectedFolderPath = value; }
+        internal static List<FolderStructure> Structures
         {
             get
             {
-                if (_structures == null)
+                if (instance._structures == null)
                 {
-                    _structures = new();
+                    instance._structures = new();
                     if (EditorPrefs.HasKey(PrefKey))
-                        _structures.AddRange(JsonUtility.FromJson<StructureList>(EditorPrefs.GetString(PrefKey)).Structures);
+                        instance._structures.AddRange(JsonUtility.FromJson<StructureList>(EditorPrefs.GetString(PrefKey)).Structures);
                 }
-                return _structures;
+                return instance._structures;
             }
         }
 
-        internal static void RecordUndo(string name) => Undo.RecordObject(instance, "ThisSome1.ColorfulHierarchy " + name);
-        internal static void Save() => AssetDatabase.SaveAssetIfDirty(instance);
-        internal static void SaveInPrefs()
+        internal static void UndoRedoHappened(in UndoRedoInfo undo)
         {
-            Save();
-            EditorPrefs.SetString(PrefKey, JsonUtility.ToJson(new StructureList { Structures = instance.Structures.ToArray() }));
+            if (undo.undoName.StartsWith(UndoPrefix))
+                FolderStructureWindow.ShowAndRepaint();
         }
+        internal static void RecordUndo(string name) => Undo.RegisterCompleteObjectUndo(instance, UndoPrefix + name);
+        internal static void Save() => EditorPrefs.SetString(PrefKey, JsonUtility.ToJson(new StructureList { Structures = Structures.ToArray() }));
     }
 }
 #endif

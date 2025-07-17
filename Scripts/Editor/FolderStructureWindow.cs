@@ -19,9 +19,11 @@ namespace ThisSome1.ColorfulHierarchy
         private static string _renameBuffer = "";
         private static float _infoPanelWidth = 400f;
         private static bool _resizingSplitter = false;
-        private static FolderData _selectedFolder = null;
         private static readonly List<bool> _folds = new();
+        private static string _lastSelectedFolderPath = "";
         private static FolderStructureWindow _window = null;
+        private static (FolderData data, string path) _selectedFolder;
+        private static (string Name, FolderDesign Design) _beforeChangeDesign;
         #endregion
 
         #region Methods
@@ -34,15 +36,31 @@ namespace ThisSome1.ColorfulHierarchy
             _window.minSize = new Vector2(400, 300);
             _window.Show();
         }
-        internal static void RepaintIfChanged()
+        internal static void ShowAndRepaint()
         {
-            if (EditorUtility.IsDirty(SavedStructures.instance))
+            if (!_window)
+                ShowWindow();
+            while (!_window) ;
+            _window.Repaint();
+        }
+        private static (FolderData data, string path) GetFolderFromPath(List<int> path)
+        {
+            if (path.Count < 2)
+                return (null, "");
+
+            FolderStructure structure = ColorfulHierarchyEditorData.Structures[path[0]];
+            (FolderData data, string path) res = (null, structure.Title);
+            try
             {
-                if (!_window)
-                    ShowWindow();
-                _window.Repaint();
-                SavedStructures.Save();
+                res = (structure.Folders[path[1]], $"{res.path}/{structure.Folders[path[1]].Name}");
+                for (int pI = 2; pI < path.Count; pI++)
+                    res = (res.data.SubFolders[path[pI]], $"{res.path}/{res.data.SubFolders[path[pI]].Name}");
             }
+            catch
+            {
+                return (null, "");
+            }
+            return res;
         }
 
         private void OnEnable()
@@ -53,10 +71,8 @@ namespace ThisSome1.ColorfulHierarchy
         }
         private void OnDisable()
         {
-            if (_window)
-                _window.position = DeselectFolder(_window.position);
             _window = null;
-            SavedStructures.SaveInPrefs();
+            ColorfulHierarchyEditorData.Save();
         }
         private void OnFocus()
         {
@@ -64,12 +80,17 @@ namespace ThisSome1.ColorfulHierarchy
         }
         private void OnLostFocus()
         {
-            SavedStructures.SaveInPrefs();
+            ColorfulHierarchyEditorData.Save();
         }
         private void OnGUI()
         {
+            if (ColorfulHierarchyEditorData.SelectedFolderPath.Count > 0 && _window.minSize == new Vector2(400, 300))
+                SelectFolder(ColorfulHierarchyEditorData.SelectedFolderPath);
+            else if (ColorfulHierarchyEditorData.SelectedFolderPath.Count == 0 && _window.minSize == new Vector2(800, 300))
+                position = DeselectFolder(position);
+
             // Draw structures list
-            var leftPanelRect = new Rect(5, 0, (_selectedFolder == null ? position.width : position.width - _infoPanelWidth) - 10, position.height);
+            var leftPanelRect = new Rect(5, 0, (ColorfulHierarchyEditorData.SelectedFolderPath.Count == 0 ? position.width : position.width - _infoPanelWidth) - 10, position.height);
             GUILayout.BeginArea(leftPanelRect);
             DrawStructureList();
             GUILayout.EndArea();
@@ -90,7 +111,8 @@ namespace ThisSome1.ColorfulHierarchy
                 e.Use();
             }
 
-            if (_selectedFolder != null)
+            _infoPanelWidth = Mathf.Clamp(_infoPanelWidth, 400, Mathf.Max(400, position.width - 400));
+            if (ColorfulHierarchyEditorData.SelectedFolderPath.Count > 0)
             {
                 // Draw splitter
                 var splitterRect = new Rect(position.width - _infoPanelWidth, 0, 5, position.height);
@@ -112,7 +134,6 @@ namespace ThisSome1.ColorfulHierarchy
                 }
 
                 HandleResize(splitterRect);
-                _infoPanelWidth = Mathf.Clamp(_infoPanelWidth, 400, position.width - 400);
             }
 
             if (Event.current != null && Event.current.type == EventType.Repaint)
@@ -124,28 +145,32 @@ namespace ThisSome1.ColorfulHierarchy
 
         private void DrawStructureList()
         {
-            if (_folds.Count < SavedStructures.instance.Structures.Count)
+            if (_folds.Count < ColorfulHierarchyEditorData.Structures.Count)
             {
                 var count = _folds.Count;
-                for (int i = 0; i < SavedStructures.instance.Structures.Count - count; i++)
+                for (int i = 0; i < ColorfulHierarchyEditorData.Structures.Count - count; i++)
                     _folds.Add(false);
             }
-            else if (_folds.Count > SavedStructures.instance.Structures.Count)
-                for (int i = SavedStructures.instance.Structures.Count; i < _folds.Count; i++)
+            else if (_folds.Count > ColorfulHierarchyEditorData.Structures.Count)
+                for (int i = ColorfulHierarchyEditorData.Structures.Count; i < _folds.Count; i++)
                     _folds[i] = false;
+
+            // Unfold the selected structure
+            if (ColorfulHierarchyEditorData.SelectedFolderPath.Count > 0)
+                _folds[ColorfulHierarchyEditorData.SelectedFolderPath[0]] = true;
 
             EditorGUILayout.LabelField("Structures:", EditorStyles.boldLabel);
             EditorGUILayout.Space(5);
 
-            if (SavedStructures.instance.Structures.Count > 0)
-                for (int i = 0; i < SavedStructures.instance.Structures.Count; i++)
+            if (ColorfulHierarchyEditorData.Structures.Count > 0)
+                for (int i = 0; i < ColorfulHierarchyEditorData.Structures.Count; i++)
                 {
                     int structIndex = i;
 
                     // Draw structure
                     Color originalColor = GUI.backgroundColor;
                     GUILayout.BeginHorizontal();
-                    _folds[structIndex] = EditorGUILayout.Foldout(_folds[structIndex], SavedStructures.instance.Structures[structIndex].Title, true);
+                    _folds[structIndex] = EditorGUILayout.Foldout(_folds[structIndex], ColorfulHierarchyEditorData.Structures[structIndex].Title, true);
 
                     var buttonStyle = new GUIStyle(GUI.skin.GetStyle("Button"))
                     {
@@ -162,7 +187,7 @@ namespace ThisSome1.ColorfulHierarchy
                         {
                             GUI.FocusControl(null);
                             _renamingIndex = structIndex;
-                            _renameBuffer = SavedStructures.instance.Structures[structIndex].Title;
+                            _renameBuffer = ColorfulHierarchyEditorData.Structures[structIndex].Title;
                         }
                         buttonStyle.fontSize = 15;
                     }
@@ -171,19 +196,17 @@ namespace ThisSome1.ColorfulHierarchy
                     if (GUILayout.Button("-", buttonStyle, GUILayout.Width(20), GUILayout.Height(18)))
                         _afterPaint += () =>
                             {
-                                SavedStructures.RecordUndo("Remove Structure");
-                                SavedStructures.instance.Structures.RemoveAt(structIndex);
+                                ColorfulHierarchyEditorData.RecordUndo("Remove Structure");
+                                ColorfulHierarchyEditorData.Structures.RemoveAt(structIndex);
                                 position = DeselectFolder(position);
-                                SavedStructures.Save();
                             };
                     // Add folder button
                     GUI.backgroundColor = Color.green;
                     if (GUILayout.Button("+", buttonStyle, GUILayout.Width(20), GUILayout.Height(18)))
                         _afterPaint += () =>
                             {
-                                SavedStructures.RecordUndo("Add Folder");
-                                SavedStructures.instance.Structures[structIndex].Folders.Add(new FolderData() { Name = "New Folder", Design = new FolderDesign(SavedStructures.instance.Structures[structIndex].Folders[^1].Design) });
-                                SavedStructures.Save();
+                                ColorfulHierarchyEditorData.RecordUndo("Add Folder");
+                                ColorfulHierarchyEditorData.Structures[structIndex].Folders.Add(new FolderData() { Name = "New Folder", Design = new FolderDesign(ColorfulHierarchyEditorData.Structures[structIndex].Folders[^1].Design) });
                             };
                     GUILayout.EndHorizontal();
 
@@ -218,8 +241,10 @@ namespace ThisSome1.ColorfulHierarchy
                     //  Draw structure folders
                     if (_folds[structIndex])
                     {
-                        foreach (FolderData folder in SavedStructures.instance.Structures[structIndex].Folders)
-                            ViewFolderRecursive(folder, 2, SavedStructures.instance.Structures[structIndex].Folders);
+                        for (int fI = 0; fI < ColorfulHierarchyEditorData.Structures[structIndex].Folders.Count; fI++)
+                            ViewFolderRecursive(ColorfulHierarchyEditorData.Structures[structIndex].Folders[fI], ColorfulHierarchyEditorData.Structures[structIndex].Folders, new() { structIndex, fI });
+                        // foreach (FolderData folder in SavedStructures.Structures[structIndex].Folders)
+                        //     ViewFolderRecursive(folder, 2, SavedStructures.Structures[structIndex].Folders, SavedStructures.Structures[structIndex].Title);
                     }
                     GUI.backgroundColor = originalColor;
                 }
@@ -235,8 +260,8 @@ namespace ThisSome1.ColorfulHierarchy
             if (GUILayout.Button("Create New Structure", GUILayout.Width(200)))
                 _afterPaint += () =>
                     {
-                        SavedStructures.RecordUndo("Add Structure");
-                        SavedStructures.instance.Structures.Add(new FolderStructure()
+                        ColorfulHierarchyEditorData.RecordUndo("Add Structure");
+                        ColorfulHierarchyEditorData.Structures.Add(new FolderStructure()
                         {
                             Title = "New Structure",
                             Folders = new List<FolderData>() { new FolderData()
@@ -246,7 +271,6 @@ namespace ThisSome1.ColorfulHierarchy
                                         }
                                     }
                         });
-                        SavedStructures.Save();
                     };
             GUILayout.FlexibleSpace();
             GUILayout.EndHorizontal();
@@ -255,69 +279,95 @@ namespace ThisSome1.ColorfulHierarchy
         }
         private void DrawSelectedFolderInfo()
         {
-            if (_selectedFolder == null)
+            if (ColorfulHierarchyEditorData.SelectedFolderPath.Count == 0)
                 return;
 
             EditorGUI.BeginChangeCheck();
+            if (_lastSelectedFolderPath != string.Join(',', ColorfulHierarchyEditorData.SelectedFolderPath))
+            {
+                _lastSelectedFolderPath = string.Join(',', ColorfulHierarchyEditorData.SelectedFolderPath);
+                _selectedFolder = GetFolderFromPath(ColorfulHierarchyEditorData.SelectedFolderPath);
+            }
+            _beforeChangeDesign = (_selectedFolder.data.Name, new(_selectedFolder.data.Design));
 
-            EditorGUILayout.BeginHorizontal();
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Reset"))
-                _selectedFolder.Design = FolderDesign.Default();
-            EditorGUILayout.EndHorizontal();
+            EditorGUILayout.LabelField(_selectedFolder.path, new GUIStyle() { fontStyle = FontStyle.Bold, normal = new() { textColor = Color.white } });
 
             GUILayout.Space(10);
 
             EditorGUILayout.BeginHorizontal();
             EditorGUILayout.LabelField("Name:");
-            _selectedFolder.Name = EditorGUILayout.TextField(_selectedFolder.Name);
+            _selectedFolder.data.Name = EditorGUILayout.TextField(_selectedFolder.data.Name);
             EditorGUILayout.EndHorizontal();
 
-            _selectedFolder.Design.textColor = EditorGUILayout.ColorField(new GUIContent("Text Color:"), _selectedFolder.Design.textColor, true, false, false);
-            _selectedFolder.Design.backgroundColor = EditorGUILayout.ColorField(new GUIContent("Background Color:"), _selectedFolder.Design.backgroundColor, true, false, false);
-            _selectedFolder.Design.textAlignment = (TextAnchor)EditorGUILayout.EnumPopup(new GUIContent("Text Alignment:"), _selectedFolder.Design.textAlignment);
-            _selectedFolder.Design.fontStyle = (FontStyle)EditorGUILayout.EnumPopup(new GUIContent("Font Style:"), _selectedFolder.Design.fontStyle);
-            _selectedFolder.Design.fontSize = Mathf.Max(1, EditorGUILayout.IntField(new GUIContent("Font Size:"), _selectedFolder.Design.fontSize));
+            _selectedFolder.data.Design.textColor = EditorGUILayout.ColorField(new GUIContent("Text Color:"), _selectedFolder.data.Design.textColor, true, false, false);
+            _selectedFolder.data.Design.backgroundColor = EditorGUILayout.ColorField(new GUIContent("Background Color:"), _selectedFolder.data.Design.backgroundColor, true, false, false);
+            _selectedFolder.data.Design.textAlignment = (TextAnchor)EditorGUILayout.EnumPopup(new GUIContent("Text Alignment:"), _selectedFolder.data.Design.textAlignment);
+            _selectedFolder.data.Design.fontStyle = (FontStyle)EditorGUILayout.EnumPopup(new GUIContent("Font Style:"), _selectedFolder.data.Design.fontStyle);
+            _selectedFolder.data.Design.fontSize = Mathf.Max(1, EditorGUILayout.IntField(new GUIContent("Font Size:"), _selectedFolder.data.Design.fontSize));
+
+            GUILayout.Space(10);
+
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.FlexibleSpace();
+            if (GUILayout.Button("Reset"))
+                _selectedFolder.data.Design = FolderDesign.Default();
+            EditorGUILayout.EndHorizontal();
+
+            if (EditorGUI.EndChangeCheck())
+            {
+                var (Name, Design) = (_selectedFolder.data.Name, _selectedFolder.data.Design);
+                _selectedFolder.data.Design = _beforeChangeDesign.Design;
+                _selectedFolder.data.Name = _beforeChangeDesign.Name;
+                ColorfulHierarchyEditorData.RecordUndo("Change Folder Design");
+                _selectedFolder.data.Design = Design;
+                _selectedFolder.data.Name = Name;
+            }
         }
         private static void RemoveEmptyStructures()
         {
-            for (int i = SavedStructures.instance.Structures.ToArray().Length - 1; i >= 0; i--)
-                if (SavedStructures.instance.Structures[i].Folders.Count == 0)
+            for (int i = ColorfulHierarchyEditorData.Structures.ToArray().Length - 1; i >= 0; i--)
+                if (ColorfulHierarchyEditorData.Structures[i].Folders.Count == 0)
                 {
-                    SavedStructures.RecordUndo("Remove Folder");
-                    SavedStructures.instance.Structures.RemoveAt(i);
+                    ColorfulHierarchyEditorData.RecordUndo("Remove Folder");
+                    ColorfulHierarchyEditorData.Structures.RemoveAt(i);
                 }
-            SavedStructures.Save();
         }
         private static void RenameStructure(int structureIndex)
         {
-            SavedStructures.RecordUndo("Rename Folder Structure");
-            SavedStructures.instance.Structures[structureIndex].Title = _renameBuffer;
+            ColorfulHierarchyEditorData.RecordUndo("Rename Folder Structure");
+            ColorfulHierarchyEditorData.Structures[structureIndex].Title = _renameBuffer;
             _renamingIndex = -1;
-            SavedStructures.Save();
         }
-        private void SelectFolder(FolderData selected)
+        private void SelectFolder(List<int> path)
         {
-            if (_selectedFolder == selected)
+            var selected = GetFolderFromPath(path);
+            if (selected.path == _selectedFolder.path)
                 return;
 
-            if (_selectedFolder == null)
+            if (_window.minSize == new Vector2(400, 300))
             {
                 position = new Rect(position.x, position.y, position.width + 400, position.height);
                 _window.minSize = new Vector2(800, 300);
                 _infoPanelWidth = 400;
             }
 
+            ColorfulHierarchyEditorData.RecordUndo($"Select Folder: {selected.path}");
+
+            ColorfulHierarchyEditorData.SelectedFolderPath = path;
             _selectedFolder = selected;
             GUI.FocusControl(null);
         }
         private static Rect DeselectFolder(Rect position)
         {
-            if (_selectedFolder == null)
+            if (string.IsNullOrEmpty(_lastSelectedFolderPath))
                 return position;
 
-            _selectedFolder = null;
+            ColorfulHierarchyEditorData.RecordUndo($"Deselect Folder: {_selectedFolder.path}");
+
+            ColorfulHierarchyEditorData.SelectedFolderPath.Clear();
             _window.minSize = new Vector2(400, 300);
+            _lastSelectedFolderPath = "";
+            _selectedFolder = default;
             GUI.FocusControl(null);
             return new Rect(position.x, position.y, position.width - _infoPanelWidth, position.height);
         }
@@ -338,7 +388,7 @@ namespace ThisSome1.ColorfulHierarchy
                 case EventType.MouseDrag:
                     if (_resizingSplitter)
                     {
-                        _infoPanelWidth = Mathf.Clamp(position.width - e.mousePosition.x, 400, position.width - 400);
+                        _infoPanelWidth = Mathf.Clamp(position.width - e.mousePosition.x, 400, Mathf.Max(400, position.width - 400));
                         e.Use();
                     }
                     break;
@@ -348,11 +398,10 @@ namespace ThisSome1.ColorfulHierarchy
                     break;
             }
         }
-
-        private void ViewFolderRecursive(FolderData folderData, int indentLevel, List<FolderData> container)
+        private void ViewFolderRecursive(FolderData folderData, List<FolderData> container, List<int> path)
         {
             GUILayout.BeginHorizontal();
-            GUILayout.Space(indentLevel * 15);
+            GUILayout.Space(path.Count * 15);
             GUI.backgroundColor = folderData.Design.backgroundColor;
             if (GUILayout.Button(folderData.Name, new GUIStyle()
             {
@@ -361,7 +410,7 @@ namespace ThisSome1.ColorfulHierarchy
                 alignment = folderData.Design.textAlignment,
                 normal = new GUIStyleState() { textColor = folderData.Design.textColor, background = Texture2D.whiteTexture }
             }, GUILayout.MinHeight(20)))
-                SelectFolder(folderData);
+                SelectFolder(path);
             var buttonStyle = new GUIStyle(GUI.skin.GetStyle("Button"))
             {
                 padding = new RectOffset(),
@@ -373,26 +422,24 @@ namespace ThisSome1.ColorfulHierarchy
                 if (GUILayout.Button("-", buttonStyle, GUILayout.Width(20), GUILayout.Height(18)))
                     _afterPaint += () =>
                         {
-                            SavedStructures.RecordUndo("Remove Folder");
-                            if (_selectedFolder == folderData)
+                            ColorfulHierarchyEditorData.RecordUndo("Remove Folder");
+                            if (_selectedFolder.data == folderData)
                                 position = DeselectFolder(position);
                             container.Remove(folderData);
-                            SavedStructures.Save();
                         };
             }
             GUI.backgroundColor = Color.green;
             if (GUILayout.Button("+", buttonStyle, GUILayout.Width(20), GUILayout.Height(18)))
                 _afterPaint += () =>
                     {
-                        SavedStructures.RecordUndo("Add Folder");
+                        ColorfulHierarchyEditorData.RecordUndo("Add Folder");
                         folderData.SubFolders.Add(new FolderData() { Name = "New Folder", Design = new FolderDesign(folderData.SubFolders.Count > 0 ? folderData.SubFolders[^1].Design : folderData.Design) });
-                        SavedStructures.Save();
                     };
             GUILayout.EndHorizontal();
 
             if (folderData.SubFolders.Count > 0)
-                foreach (FolderData subFolder in folderData.SubFolders)
-                    ViewFolderRecursive(subFolder, indentLevel + 1, folderData.SubFolders);
+                for (int i = 0; i < folderData.SubFolders.Count; i++)
+                    ViewFolderRecursive(folderData.SubFolders[i], folderData.SubFolders, new(path) { i });
         }
         #endregion
     }
@@ -410,9 +457,9 @@ namespace ThisSome1.ColorfulHierarchy
 
         private void OnGUI()
         {
-            if (SavedStructures.instance == null)
+            if (ColorfulHierarchyEditorData.instance == null)
                 ShowWindow();
-            else if (SavedStructures.instance.Structures.Count == 0)
+            else if (ColorfulHierarchyEditorData.Structures.Count == 0)
             {
                 EditorGUILayout.LabelField("No Structures Found.");
                 GUILayout.BeginHorizontal();
@@ -427,7 +474,7 @@ namespace ThisSome1.ColorfulHierarchy
             }
             else
             {
-                foreach (FolderStructure structure in SavedStructures.instance.Structures)
+                foreach (FolderStructure structure in ColorfulHierarchyEditorData.Structures)
                     if (GUILayout.Button(structure.Title))
                     {
                         foreach (FolderData folder in structure.Folders)

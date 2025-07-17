@@ -17,8 +17,8 @@ namespace ThisSome1.ColorfulHierarchy
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindow;
 
             // Handle undo and redo for saved structures.
-            Undo.undoRedoPerformed -= FolderStructureWindow.RepaintIfChanged;
-            Undo.undoRedoPerformed += FolderStructureWindow.RepaintIfChanged;
+            Undo.undoRedoEvent -= ColorfulHierarchyEditorData.UndoRedoHappened;
+            Undo.undoRedoEvent += ColorfulHierarchyEditorData.UndoRedoHappened;
 
             // Create the PalapalHelper if needed.
             EditorApplication.delayCall += CreatePalapalHelper;
@@ -181,7 +181,8 @@ namespace ThisSome1.ColorfulHierarchy
                         folders.Push((ccd, depth + 1));
             }
 
-            SavedStructures.instance.Structures.Add(new FolderStructure() { Title = "Saved Structure", Folders = new List<FolderData>(structure) });
+            ColorfulHierarchyEditorData.RecordUndo("Saved Folder Structure");
+            ColorfulHierarchyEditorData.Structures.Add(new FolderStructure() { Title = "Saved Structure", Folders = new List<FolderData>(structure) });
             FolderStructureWindow.ShowWindow();
 
             Selection.activeGameObject = null;
@@ -233,9 +234,9 @@ namespace ThisSome1.ColorfulHierarchy
                                                             "\n\t\tprivate static void CreateFolderStructure() => SelectStructureWindow.ShowWindow();\n\t}\n}\n#endif");
                 File.WriteAllText(dir + "/PalapalHelper.cs.meta", $"fileFormatVersion: 2\nguid: {GUID.Generate()}");
 
-                if (!SavedStructures.instance.Structures.Any((structure) => structure.Title == "Palapal"))
+                if (!ColorfulHierarchyEditorData.Structures.Any((structure) => structure.Title == "Palapal"))
                 {
-                    SavedStructures.instance.Structures.Add(new FolderStructure()
+                    ColorfulHierarchyEditorData.Structures.Add(new FolderStructure()
                     {
                         Title = "Palapal",
                         Folders = new List<FolderData>()
@@ -251,7 +252,7 @@ namespace ThisSome1.ColorfulHierarchy
                             new() { Name = "Gameplay", Design = new FolderDesign(true) { textColor = Color.white, backgroundColor = new Color(1, 0, 0) } },
                         }
                     });
-                    SavedStructures.SaveInPrefs();
+                    ColorfulHierarchyEditorData.Save();
                 }
             }
         }
