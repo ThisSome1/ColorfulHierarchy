@@ -8,7 +8,7 @@
 ### Deprecated
 -->
 
-## [1.3.2] - 2025-07-17
+## [1.3.3] - 2025-07-17
 ### Fixed
 - Fixed Undo/Redo bug (needed two undo/redos to undo/redo change)
 ### Changed
