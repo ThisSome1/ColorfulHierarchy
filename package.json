@@ -17,7 +17,7 @@
         "ColorfulHierarchy"
     ],
     "_upm": {
-        "changelog": "### Fixed\n- Fixed Undo/Redo bug (needed two undo/redos to undo/redo change)\n### Changed\n- Improved class and folder naming."
+        "changelog": "### Fixed\n- Fixed Undo/Redo bug (needed two undo/redos to undo/redo change)\n\n### Changed\n- Improved class and folder naming."
     },
     "changelogUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/CHANGELOG.md",
     "author": {
