@@ -1,6 +1,6 @@
 {
     "name": "com.thissome1.colorful-hierarchy",
-    "version": "1.3.3-fix.1",
+    "version": "1.3.3-fix.2",
     "displayName": "Colorful Hierarchy",
     "description": "Paints your gameObject window with colorful folders. easy access, removed in build, can be removed in play mode too for testing and such.",
     "unity": "2022.3",
@@ -16,10 +16,9 @@
         "HierarchyFolder",
         "ColorfulHierarchy"
     ],
-    "_upm": {
-        "changelog": "### Fixed\n- Fixed Undo/Redo bug (needed two undo/redos to undo/redo change)\n\n### Changed\n- Improved class and folder naming."
-    },
+    "licensesUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/LICENSE.md",
     "changelogUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/CHANGELOG.md",
+    "documentationUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/README.md",
     "author": {
         "name": "ThisSome1",
         "email": "h.behroozib4u@gmail.com"
