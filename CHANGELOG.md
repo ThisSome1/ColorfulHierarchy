@@ -1,9 +1,5 @@
 # Changelog
 
-## [1.3.3-fix.3] - 2025-07-18
-
-### Changed
-- Internal build fix for package versioning issues.
 
 ## [1.3.3] - 2025-07-17
 
