@@ -15,8 +15,8 @@ namespace ThisSome1.ColorfulHierarchy
 
             foreach (ColorDesign nc in Object.FindObjectsByType<ColorDesign>(FindObjectsSortMode.None))
             {
-                foreach (GameObject child in nc.transform)
-                    child.SetActive(nc.gameObject.activeSelf & child.activeSelf);
+                foreach (Transform child in nc.transform)
+                    child.gameObject.SetActive(nc.gameObject.activeSelf & child.gameObject.activeSelf);
                 nc.transform.DetachChildren();
                 Undo.DestroyObjectImmediate(nc.gameObject);
             }
