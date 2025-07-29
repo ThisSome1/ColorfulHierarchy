@@ -1,9 +1,14 @@
 # Changelog
 
-## [1.3.4] - 2025-07-29
+## [1.3.5] - 2025-07-29
 
 ### Removed
 - Removed redundant meta file generating warning.
+
+## [1.3.4] - 2025-07-20
+
+### Fixed
+- Fixed type casting bug preventing build.
 
 ## [1.3.3] - 2025-07-17
 
