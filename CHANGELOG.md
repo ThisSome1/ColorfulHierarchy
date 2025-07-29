@@ -1,10 +1,14 @@
 # Changelog
 
+## [1.3.4] - 2025-07-29
+
+### Removed
+- Removed redundant meta file generating warning.
 
 ## [1.3.3] - 2025-07-17
 
 ### Fixed
-- Fixed Undo/Redo bug (needed two undo/redos to undo/redo change)
+- Fixed Undo/Redo bug (needed two undo/redos to undo/redo change).
 
 ### Changed
 - Improved class and folder naming.

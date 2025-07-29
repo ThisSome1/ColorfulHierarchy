@@ -17,7 +17,7 @@
         "ColorfulHierarchy"
     ],
     "_upm": {
-        "changelog": "Fixed:\n\t- Fixed type casting bug preventing build.\n"
+        "changelog": "Removed:\n\t- Removed redundant meta file generating warning.\n"
     },
     "licensesUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/LICENSE.md",
     "changelogUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/CHANGELOG.md",
