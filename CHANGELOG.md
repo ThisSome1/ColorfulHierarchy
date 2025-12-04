@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.6] - 2025-12-04
+
+### Fixed
+- Fixed `HideGizmoIcon` method in `ColorDesign.cs` to properly work in unity 6.
+
 ## [1.3.5] - 2025-07-29
 
 ### Removed

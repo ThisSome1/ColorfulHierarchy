@@ -22,8 +22,9 @@ namespace ThisSome1.ColorfulHierarchy
         private static void HideGizmoIcon()
         {
             const int MONO_BEHAVIOR_CLASS_ID = 114; // https://docs.unity3d.com/Manual/ClassIDReference.html
-            var ass = Assembly.GetAssembly(typeof(Editor))?.GetType("UnityEditor.AnnotationUtility")?.GetMethod("SetIconEnabled", BindingFlags.Static | BindingFlags.NonPublic);
-            ass.Invoke(null, new object[] { MONO_BEHAVIOR_CLASS_ID, typeof(ColorDesign).Name, 0 });
+            System.Type annotationType = Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.AnnotationUtility");
+            var setIconEnabled = annotationType?.GetMethod("SetIconEnabled", BindingFlags.Static | BindingFlags.NonPublic);
+            setIconEnabled?.Invoke(null, new object[] { MONO_BEHAVIOR_CLASS_ID, typeof(ColorDesign).Name, 0 });
         }
 
         private void Reset()
