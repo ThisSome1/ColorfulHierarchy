@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.3.7] - 2025-12-21
+
+### Added
+- Added `SelectStructureWindow.cs` in a separate script for better readability and maintainability.
+
+### Changed
+- Changed folder color style in hierarchy.
+- Moved menu item from `Window` tab to `ThisSome1` tab.
+
+### Fixed
+- Fixed `FolderStructureWindow` folders clipped by windows and didn't scroll.
+- Fixed `SelectStructureWindow` folders clipped by windows and didn't scroll.
+
 ## [1.3.6] - 2025-12-04
 
 ### Fixed

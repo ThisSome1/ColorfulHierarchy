@@ -10,8 +10,21 @@ namespace ThisSome1.ColorfulHierarchy
     [InitializeOnLoad]
     internal class StyleHierarchy
     {
+        internal static Texture2D gradientTexture;
+
         static StyleHierarchy()
         {
+            // Initialize the gradient texture.
+            gradientTexture = new(1000, 1, TextureFormat.RGBA32, false)
+            {
+                name = "[Generated] Gradient Texture",
+                hideFlags = HideFlags.DontSave,
+                filterMode = FilterMode.Bilinear,
+            };
+            for (int i = 0; i <= 1000; i++)
+                gradientTexture.SetPixel(i, 0, new Color(1, 1, 1, Mathf.Lerp(1, 0, Mathf.Pow(Mathf.Clamp01((Mathf.Abs(500 - i) - 200) / 300f), 2))));
+            gradientTexture.Apply();
+
             // Check if the color palette asset is importing.
             EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyWindow;
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindow;
@@ -72,25 +85,29 @@ namespace ThisSome1.ColorfulHierarchy
                 var nameStyle = new GUIStyle()
                 {
                     fontSize = design.fontSize,
+                    clipping = TextClipping.Clip,
                     fontStyle = design.fontStyle,
                     alignment = design.textAlignment,
                     normal = new GUIStyleState() { textColor = design.textColor }
                 };
 
                 // Draw a rectangle as a background, and set the color.
+                selectionRect.width += 15;
                 design.backgroundColor.a = 1;
+                EditorGUI.DrawRect(selectionRect, (Color)typeof(EditorGUIUtility).GetMethod("GetDefaultBackgroundColor", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static).Invoke(null, null));
                 Rect boxRect = new(selectionRect.x, selectionRect.y, selectionRect.height, selectionRect.height);
-                Rect nameRect = new(selectionRect.x + selectionRect.height, selectionRect.y, selectionRect.width - selectionRect.height, selectionRect.height);
+                Rect rect = thisGO && !thisGO.activeInHierarchy ? new(selectionRect.x + selectionRect.height, selectionRect.y, selectionRect.width - selectionRect.height, selectionRect.height) : selectionRect;
+
                 if (thisGO && !thisGO.activeInHierarchy)
                 {
-                    EditorGUI.DrawRect(boxRect, Color.white);
-                    EditorGUI.DrawRect(nameRect, design.backgroundColor);
-                    EditorGUI.LabelField(nameRect, instance.name[(instance.name.IndexOf(' ') + 1)..], nameStyle);
-                    EditorGUI.LabelField(boxRect, "X", new GUIStyle() { fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter, normal = new GUIStyleState() { textColor = Color.red } });
+                    GUI.DrawTexture(boxRect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 1, Color.white, 0, rect.height);
+                    GUI.DrawTexture(rect, gradientTexture, ScaleMode.StretchToFill, true, rect.width / rect.height, design.backgroundColor, 0, 0);
+                    EditorGUI.LabelField(rect, instance.name[(instance.name.IndexOf(' ') + 1)..], nameStyle);
+                    EditorGUI.LabelField(boxRect, "×", new GUIStyle() { fontSize = (int)rect.height, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter, normal = new GUIStyleState() { textColor = Color.red } });
                 }
                 else
                 {
-                    EditorGUI.DrawRect(selectionRect, design.backgroundColor);
+                    GUI.DrawTexture(selectionRect, gradientTexture, ScaleMode.StretchToFill, true, rect.width / rect.height, design.backgroundColor, 0, 0);
                     EditorGUI.LabelField(selectionRect, instance.name[(instance.name.IndexOf(' ') + 1)..], nameStyle);
                 }
             }
@@ -229,8 +246,8 @@ namespace ThisSome1.ColorfulHierarchy
             {
                 File.WriteAllText(dir + "/PalapalHelper.cs", "#if UNITY_EDITOR\nusing UnityEditor;\n\nnamespace ThisSome1.ColorfulHierarchy\n{\n\tpublic class PalapalHelper\n\t{" +
                                                             "\n\t\t[MenuItem(\"Palapal/ColorfulHierarchy/Folder Structures\")]\n\t\tpublic static void ShowWindow() => FolderStructureWindow.ShowWindow();" +
-                                                            "\n\t\t[MenuItem(\"GameObject/Palpal/Colorful Hierarchy/Deploy Folder Structure\", true)]\n\t\tprivate static bool NoSelection() => Selection.count < 2;" +
-                                                            "\n\t\t[MenuItem(\"GameObject/Palpal/Colorful Hierarchy/Deploy Folder Structure\", false)]" +
+                                                            "\n\t\t[MenuItem(\"GameObject/Palapal/Colorful Hierarchy/Deploy Folder Structure\", true)]\n\t\tprivate static bool NoSelection() => Selection.count < 2;" +
+                                                            "\n\t\t[MenuItem(\"GameObject/Palapal/Colorful Hierarchy/Deploy Folder Structure\", false)]" +
                                                             "\n\t\tprivate static void CreateFolderStructure() => SelectStructureWindow.ShowWindow();\n\t}\n}\n#endif");
                 File.WriteAllText(dir + "/PalapalHelper.cs.meta", $"fileFormatVersion: 2\nguid: {GUID.Generate()}");
 
