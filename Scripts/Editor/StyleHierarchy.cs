@@ -71,9 +71,20 @@ namespace ThisSome1.ColorfulHierarchy
                     }
                 }
 
+                bool ignoreColorDesign = true;
                 foreach (Component c in thisGO.GetComponents<Component>())
-                    if (c is not Transform and not ColorDesign)
-                        Object.DestroyImmediate(c);
+                {
+                    if (ignoreColorDesign && c is ColorDesign)
+                    {
+                        ignoreColorDesign = false;
+                        continue;
+                    }
+                    if (c is Transform)
+                        continue;
+
+                    Object.DestroyImmediate(c);
+                }
+
                 if (!thisGO.TryGetComponent(out ColorDesign cd))
                     cd = thisGO.AddComponent<ColorDesign>();
                 cd.enabled = true;

@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.8] - 2026-04-28
+
+### Fixed
+- Fixed null reference error in build when having multiple `ColorDesign` component on folders, by preventing multiple `ColorDesign` components on the same folder.
+
 ## [1.3.7] - 2025-12-21
 
 ### Added
