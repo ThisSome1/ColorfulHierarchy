@@ -21,10 +21,14 @@ namespace ThisSome1.ColorfulHierarchy
 
         private static void HideGizmoIcon()
         {
+#if UNITY_6000_0_OR_NEWER
+            GizmoUtility.SetIconEnabled(typeof(ColorDesign), false);
+#else
             const int MONO_BEHAVIOR_CLASS_ID = 114; // https://docs.unity3d.com/Manual/ClassIDReference.html
             System.Type annotationType = Assembly.GetAssembly(typeof(Editor)).GetType("UnityEditor.AnnotationUtility");
             var setIconEnabled = annotationType?.GetMethod("SetIconEnabled", BindingFlags.Static | BindingFlags.NonPublic);
             setIconEnabled?.Invoke(null, new object[] { MONO_BEHAVIOR_CLASS_ID, typeof(ColorDesign).Name, 0 });
+#endif
         }
 
         private void Reset()

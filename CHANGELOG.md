@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.10] - 2026-07-3
+
+### Fixed
+- Fixed not hiding the gizmo icon of the ColorDesign component unity 6 and newer.
+
 ## [1.3.9] - 2026-07-3
 
 ### Fixed
