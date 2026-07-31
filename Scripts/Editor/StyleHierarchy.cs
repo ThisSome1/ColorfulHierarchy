@@ -26,8 +26,13 @@ namespace ThisSome1.ColorfulHierarchy
             gradientTexture.Apply();
 
             // Check if the color palette asset is importing.
+#if UNITY_6000_3_OR_NEWER
+            EditorApplication.hierarchyWindowItemByEntityIdOnGUI -= OnHierarchyWindow;
+            EditorApplication.hierarchyWindowItemByEntityIdOnGUI += OnHierarchyWindow;
+#else
             EditorApplication.hierarchyWindowItemOnGUI -= OnHierarchyWindow;
             EditorApplication.hierarchyWindowItemOnGUI += OnHierarchyWindow;
+#endif
 
             // Handle undo and redo for saved structures.
             Undo.undoRedoEvent -= ColorfulHierarchyEditorData.UndoRedoHappened;
@@ -37,9 +42,15 @@ namespace ThisSome1.ColorfulHierarchy
             EditorApplication.delayCall += CreatePalapalHelper;
         }
 
+#if UNITY_6000_3_OR_NEWER
+        private static void OnHierarchyWindow(EntityId instanceID, Rect selectionRect)
+        {
+            Object instance = EditorUtility.EntityIdToObject(instanceID);
+#else
         private static void OnHierarchyWindow(int instanceID, Rect selectionRect)
         {
             Object instance = EditorUtility.InstanceIDToObject(instanceID);
+#endif
             if (instance == null)
                 return;
 

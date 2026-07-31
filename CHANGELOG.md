@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.3.9] - 2026-07-3
+
+### Fixed
+- Fixed the InstanceIDToObject obsolete in unity 6.5.
+
 ## [1.3.8] - 2026-04-28
 
 ### Fixed

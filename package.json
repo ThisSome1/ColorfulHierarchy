@@ -1,11 +1,10 @@
 {
     "name": "com.thissome1.colorful-hierarchy",
-    "version": "1.3.8",
+    "version": "1.3.9",
     "displayName": "Colorful Hierarchy",
     "description": "Paints your gameObject window with colorful folders. easy access, removed in build, can be removed in play mode too for testing and such.",
     "unity": "2022.3",
     "category": "Tool",
-    "type": "tool",
     "keywords": [
         "ThisSome1",
         "EditorTools",
@@ -17,7 +16,7 @@
         "ColorfulHierarchy"
     ],
     "_upm": {
-        "changelog": "### Fixed\n\t- Fixed null reference error in build when having multiple `ColorDesign` component on folders, by preventing multiple `ColorDesign` components on the same folder.\n"
+        "changelog": "### Fixed\n\t- - Fixed the InstanceIDToObject method becoming obsolete in unity 6.5.\n"
     },
     "licensesUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/LICENSE.md",
     "changelogUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/CHANGELOG.md",
