@@ -7,36 +7,41 @@ on:
 
 jobs:
   tag_and_release:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     if: "contains(github.event.head_commit.message, 'release: ')"
     permissions:
       contents: write
 
     steps:
       - name: Checkout Code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Extract Tag Version and Create Tag
         id: extract_tag
         run: |
           COMMIT_MSG="${{ github.event.head_commit.message }}"
-          
-          if [[ "$COMMIT_MSG" =~ release:[[:space:]]*((?:[\w+]\/?)*([0-9]+\.[0-9]+\.[0-9]+)) ]]; then
+
+          if [[ "$COMMIT_MSG" =~ release:[[:space:]]*(([[:alnum:]_+]+\/?)*([0-9]+\.[0-9]+\.[0-9]+)) ]]; then
             TAG="${BASH_REMATCH[1]}"
-            VER="${BASH_REMATCH[2]}"
+            VER="${BASH_REMATCH[3]}"
+
             echo "Found tag $TAG in commit message."
-            echo "tag_version=$TAG" >> $GITHUB_OUTPUT
-            echo "semver"=$VER" >> $GITHUB_OUTPUT
-            
+            echo "Semantic version: $VER"
+
+            echo "tag_version=$TAG" >> "$GITHUB_OUTPUT"
+            echo "semver=$VER" >> "$GITHUB_OUTPUT"
+
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
-            
-            git tag $TAG
-            git push origin $TAG
+
+            git tag "$TAG"
+            git push origin "$TAG"
+
             echo "Successfully created and pushed tag $TAG."
           else
             echo "No valid release tag found in commit message."
-            echo "tag_version=" >> $GITHUB_OUTPUT
+            echo "tag_version=" >> "$GITHUB_OUTPUT"
+            echo "semver=" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Extract Changelog
