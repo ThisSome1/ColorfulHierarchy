@@ -11,3 +11,4 @@ A folder can't have any components and transform overrides and will be removed
 when building the project.
 
 Remove components before converting GameObject to a folder.
+test
