@@ -34,8 +34,8 @@ jobs:
             git config user.name "github-actions[bot]"
             git config user.email "github-actions[bot]@users.noreply.github.com"
 
-            git tag "$TAG"
-            git push origin "$TAG"
+            git tag "$VER"
+            git push origin "$VER"
 
             echo "Successfully created and pushed tag $TAG."
           else
