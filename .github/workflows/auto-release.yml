@@ -1,0 +1,78 @@
+name: Auto Tag and Release from Commit
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  tag_and_release:
+    runs-on: ubuntu-latest
+    if: "contains(github.event.head_commit.message, 'release: ')"
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Extract Tag Version and Create Tag
+        id: extract_tag
+        run: |
+          COMMIT_MSG="${{ github.event.head_commit.message }}"
+          
+          if [[ "$COMMIT_MSG" =~ release:[[:space:]]*((?:[\w+]\/?)*([0-9]+\.[0-9]+\.[0-9]+)) ]]; then
+            TAG="${BASH_REMATCH[1]}"
+            VER="${BASH_REMATCH[2]}"
+            echo "Found tag $TAG in commit message."
+            echo "tag_version=$TAG" >> $GITHUB_OUTPUT
+            echo "semver"=$VER" >> $GITHUB_OUTPUT
+            
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            
+            git tag $TAG
+            git push origin $TAG
+            echo "Successfully created and pushed tag $TAG."
+          else
+            echo "No valid release tag found in commit message."
+            echo "tag_version=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Extract Changelog
+        if: steps.extract_tag.outputs.tag_version != ''
+        run: |
+          VERSION="${{ steps.extract_tag.outputs.semver }}"
+
+          awk -v version="$VERSION" '
+            $0 ~ "^## \\[" version "\\]" {
+              found=1
+              next
+            }
+            found && $0 ~ "^## \\[" {
+              exit
+            }
+            found {
+              print
+            }
+          ' CHANGELOG.md > release_notes.md
+
+          # Remove leading/trailing empty lines
+          sed -i '/./,$!d' release_notes.md
+          sed -i -e :a -e '/^\n*$/{$d;N;ba' -e '}' release_notes.md
+
+          if [[ ! -s release_notes.md ]]; then
+            echo "ERROR: No changelog entry found for version $VERSION"
+            exit 1
+          fi
+
+          echo "Release notes:"
+          cat release_notes.md
+
+      - name: Create GitHub Release
+        if: steps.extract_tag.outputs.tag_version != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.extract_tag.outputs.tag_version }}
+          name: v${{ steps.extract_tag.outputs.tag_version }}
+          body_path: release_notes.md
