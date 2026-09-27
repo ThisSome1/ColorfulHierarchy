@@ -167,7 +167,7 @@ namespace ThisSome1.ColorfulHierarchy
         }
         private static void OnUnbindViewItem(HierarchyWindow window, HierarchyView view, HierarchyViewItem item)
         {
-            if (item.Handler is not HierarchyGameObjectHandler || !System.Text.RegularExpressions.Regex.IsMatch(item.Name.text, @"\\\\ .+"))
+            if (item.Handler is not HierarchyGameObjectHandler)
                 return;
 
             item.style.unityBackgroundImageTintColor = StyleKeyword.Null;

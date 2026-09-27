@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.2] - 2026-09-28
+
+### Fixed
+- Fixed the folder children names randomly hiding in new hierarchy.
+
 ## [1.4.1] - 2026-09-27
 
 ### Fixed
