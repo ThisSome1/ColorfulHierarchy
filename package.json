@@ -1,6 +1,6 @@
 {
   "name": "com.thissome1.colorful-hierarchy",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "displayName": "Colorful Hierarchy",
   "description": "Paints your gameObject window with colorful folders. easy access, removed in build, can be removed in play mode too for testing and such.",
   "unity": "2022.3",
@@ -16,7 +16,7 @@
     "ColorfulHierarchy"
   ],
   "_upm": {
-    "changelog": "### Added\n\t- Added support for new hierarchy window in unity 6000.6 and newer.\n"
+    "changelog": "### Added\n\t- Fixed the starting prompt keep repeating on each unity session for new hierarchy.\n"
   },
   "licensesUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/LICENSE.md",
   "changelogUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/CHANGELOG.md",

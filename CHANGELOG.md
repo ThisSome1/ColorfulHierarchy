@@ -1,5 +1,10 @@
 # Changelog
 
+## [1.4.1] - 2026-09-27
+
+### Fixed
+- Fixed the starting prompt keep repeating on each unity session for new hierarchy.
+
 ## [1.4.0] - 2026-09-27
 
 ### Added

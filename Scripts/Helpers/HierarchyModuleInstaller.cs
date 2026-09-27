@@ -1,5 +1,6 @@
 #if UNITY_EDITOR && UNITY_6000_6_OR_NEWER
 using UnityEditor.PackageManager.Requests;
+using System.Collections.Generic;
 using UnityEditor.PackageManager;
 using UnityEditor;
 using UnityEngine;
@@ -15,7 +16,8 @@ internal static class HierarchyModuleInstaller
 
     static HierarchyModuleInstaller()
     {
-        if (IsModuleAvailable()) return;
+        if (ArePackagesInstalled(new[] { k_ModuleId, k_ModuleId2 }))
+            return;
 
         // Only ask once per project, not on every domain reload.
         if (SessionState.GetBool(k_PromptedKey, false))
@@ -37,9 +39,21 @@ internal static class HierarchyModuleInstaller
         }
     }
 
-    static bool IsModuleAvailable() => System.Type.GetType("Unity.Hierarchy.Editor.HierarchyWindow, UnityEngine.HierarchyModule") != null;
+    private static bool ArePackagesInstalled(string[] packageNames)
+    {
+        var packages = UnityEditor.PackageManager.PackageInfo.GetAllRegisteredPackages();
+        var list = new List<string>(packageNames);
+        foreach (var pkg in packages)
+            if (list.Contains(pkg.name))
+            {
+                list.Remove(pkg.name);
+                if (list.Count == 0)
+                    return true;
+            }
+        return false;
+    }
 
-    static void Progress()
+    private static void Progress()
     {
         if (_request == null || !_request.IsCompleted || _request2 == null || !_request2.IsCompleted)
             return;
