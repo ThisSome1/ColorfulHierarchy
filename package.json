@@ -1,28 +1,37 @@
 {
-    "name": "com.thissome1.colorful-hierarchy",
-    "version": "1.3.10",
-    "displayName": "Colorful Hierarchy",
-    "description": "Paints your gameObject window with colorful folders. easy access, removed in build, can be removed in play mode too for testing and such.",
-    "unity": "2022.3",
-    "category": "Tool",
-    "keywords": [
-        "ThisSome1",
-        "EditorTools",
-        "Editor",
-        "Tools",
-        "Colorful",
-        "Hierarchy",
-        "HierarchyFolder",
-        "ColorfulHierarchy"
-    ],
-    "_upm": {
-        "changelog": "### Fixed\n\t- Fixed not hiding the gizmo icon of the ColorDesign component unity 6 and newer.\n"
-    },
-    "licensesUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/LICENSE.md",
-    "changelogUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/CHANGELOG.md",
-    "documentationUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/README.md",
-    "author": {
-        "name": "ThisSome1",
-        "email": "h.behroozib4u@gmail.com"
-    }
+  "name": "com.thissome1.colorful-hierarchy",
+  "version": "1.4.0",
+  "displayName": "Colorful Hierarchy",
+  "description": "Paints your gameObject window with colorful folders. easy access, removed in build, can be removed in play mode too for testing and such.",
+  "unity": "2022.3",
+  "category": "Tool",
+  "keywords": [
+    "ThisSome1",
+    "EditorTools",
+    "Editor",
+    "Tools",
+    "Colorful",
+    "Hierarchy",
+    "HierarchyFolder",
+    "ColorfulHierarchy"
+  ],
+  "_upm": {
+    "changelog": "### Added\n\t- Added support for new hierarchy window in unity 6000.6 and newer.\n"
+  },
+  "licensesUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/LICENSE.md",
+  "changelogUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/CHANGELOG.md",
+  "documentationUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/README.md",
+  "author": {
+    "name": "ThisSome1",
+    "email": "h.behroozib4u@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ThisSome1/ColorfulHierarchy",
+    "revision": "a33d185e8393c7253f5d01b7a4a4aeb1fb53656c"
+  },
+  "publishConfig": {
+    "registry": "https://package.openupm.com"
+  },
+  "_fingerprint": "1430dacf27a16edd255b319086e7da321fbeaf1e"
 }

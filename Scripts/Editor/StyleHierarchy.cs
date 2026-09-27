@@ -4,28 +4,65 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using System.IO;
+#if UNITY_6000_6_OR_NEWER
+using Unity.Hierarchy.Editor;
+using UnityEngine.UIElements;
+using Unity.Hierarchy;
+#endif
 
 namespace ThisSome1.ColorfulHierarchy
 {
     [InitializeOnLoad]
     internal class StyleHierarchy
     {
-        internal static Texture2D gradientTexture;
+        internal readonly static Texture2D CrossMarkTexture;
+        internal readonly static Texture2D GradientTexture;
+        internal readonly static string PackageDirectory;
 
         static StyleHierarchy()
         {
+            var asset = "";
+            var guids = AssetDatabase.FindAssets($"{typeof(FolderStructureWindow).Name} t:Script");
+            if (guids.Length > 1)
+            {
+                foreach (var guid in guids)
+                {
+                    var assetPath = AssetDatabase.GUIDToAssetPath(guid);
+                    var filename = Path.GetFileNameWithoutExtension(assetPath);
+                    if (filename == typeof(FolderStructureWindow).Name)
+                    {
+                        asset = guid;
+                        break;
+                    }
+                }
+            }
+            else if (guids.Length == 1)
+                asset = guids[0];
+
+            PackageDirectory = AssetDatabase.GUIDToAssetPath(asset);
+            PackageDirectory = PackageDirectory[..PackageDirectory.LastIndexOf('/')];
+            PackageDirectory = PackageDirectory[..PackageDirectory.LastIndexOf('/')];
+            PackageDirectory = PackageDirectory[..PackageDirectory.LastIndexOf('/')];
+
             // Initialize the gradient texture.
-            gradientTexture = new(1000, 1, TextureFormat.RGBA32, false)
+            GradientTexture = new(1000, 1, TextureFormat.RGBA32, false)
             {
                 name = "[Generated] Gradient Texture",
                 hideFlags = HideFlags.DontSave,
                 filterMode = FilterMode.Bilinear,
             };
             for (int i = 0; i <= 1000; i++)
-                gradientTexture.SetPixel(i, 0, new Color(1, 1, 1, Mathf.Lerp(1, 0, Mathf.Pow(Mathf.Clamp01((Mathf.Abs(500 - i) - 200) / 300f), 2))));
-            gradientTexture.Apply();
+                GradientTexture.SetPixel(i, 0, new Color(1, 1, 1, Mathf.Lerp(1, 0, Mathf.Pow(Mathf.Clamp01((Mathf.Abs(500 - i) - 200) / 300f), 2))));
+            GradientTexture.Apply();
+
+            CrossMarkTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(PackageDirectory + "/AdditionalFiles/CrossMark.png");
 
             // Check if the color palette asset is importing.
+#if UNITY_6000_6_OR_NEWER
+            HierarchyWindow.BindViewItem += OnBindViewItem;
+            HierarchyWindow.UnbindViewItem += OnUnbindViewItem;
+#endif
+
 #if UNITY_6000_3_OR_NEWER
             EditorApplication.hierarchyWindowItemByEntityIdOnGUI -= OnHierarchyWindow;
             EditorApplication.hierarchyWindowItemByEntityIdOnGUI += OnHierarchyWindow;
@@ -41,6 +78,134 @@ namespace ThisSome1.ColorfulHierarchy
             // Create the PalapalHelper if needed.
             EditorApplication.delayCall += CreatePalapalHelper;
         }
+
+#if UNITY_6000_6_OR_NEWER
+        private static void OnBindViewItem(HierarchyWindow window, HierarchyView view, HierarchyViewItem item)
+        {
+            if (item.Handler is not HierarchyGameObjectHandler handler)
+                return;
+
+            GameObject thisGO = handler.GetGameObject(item.Node);
+            if (thisGO == null)
+                return;
+
+            if (System.Text.RegularExpressions.Regex.IsMatch(thisGO.name, @"\\\\ .+"))
+            {
+                if (thisGO.transform.localPosition != Vector3.zero || thisGO.transform.localRotation != Quaternion.identity || thisGO.transform.localScale != Vector3.one)
+                {
+                    List<(Vector3 pos, Quaternion rot)> targetTransform = new();
+                    foreach (Transform child in thisGO.transform)
+                        targetTransform.Add((child.position, child.rotation));
+
+                    Vector3 prevScale = thisGO.transform.localScale;
+                    Undo.RecordObject(thisGO.transform, "Reset Folder Transform");
+                    thisGO.transform.SetLocalPositionAndRotation(new(0, 0, 0), Quaternion.identity);
+                    thisGO.transform.localScale = new(1, 1, 1);
+
+                    foreach (Transform child in thisGO.transform)
+                    {
+                        Undo.RecordObject(child, "Reset Folder Transform");
+                        child.SetPositionAndRotation(targetTransform[0].pos, targetTransform[0].rot);
+                        child.localScale = new Vector3(child.localScale.x * prevScale.x, child.localScale.y * prevScale.y, child.localScale.z * prevScale.z);
+                        targetTransform.RemoveAt(0);
+                    }
+                }
+                bool ignoreColorDesign = true;
+                foreach (Component c in thisGO.GetComponents<Component>())
+                {
+                    if (ignoreColorDesign && c is ColorDesign)
+                    {
+                        ignoreColorDesign = false;
+                        continue;
+                    }
+                    if (c is Transform)
+                        continue;
+
+                    Object.DestroyImmediate(c);
+                }
+
+                if (!thisGO.TryGetComponent(out ColorDesign cd))
+                    cd = thisGO.AddComponent<ColorDesign>();
+                cd.enabled = true;
+                FolderDesign design = cd.Settings;
+
+                item.style.backgroundImage = new StyleBackground(GradientTexture);
+                item.style.unityBackgroundImageTintColor = design.backgroundColor;
+                item.style.opacity = thisGO.activeInHierarchy ? 1 : 0.6f;
+
+                var leftContainer = item.Q<VisualElement>(className: "hierarchy-item__left-container");
+                leftContainer.style.flexGrow = 1;
+
+                var icon = item.Q<VisualElement>(className: "hierarchy-item__icon");
+                icon.style.backgroundImage = thisGO.activeSelf ? null : CrossMarkTexture;
+                icon.style.backgroundColor = Color.clear;
+                var overlayIcon = item.Q<VisualElement>(className: "hierarchy-item__overlay-icon");
+                overlayIcon.style.backgroundColor = Color.clear;
+                overlayIcon.style.backgroundImage = null;
+
+                var nameContainer = item.Q<VisualElement>(className: "hierarchy-item__name");
+                nameContainer.style.flexGrow = 1;
+
+                var name = nameContainer.Q<Label>();
+                name.style.display = DisplayStyle.None;
+
+                nameContainer.Q<TextField>().RegisterCallback<FocusInEvent>(OnRenameStarted);
+                nameContainer.Q<TextField>().RegisterCallback<FocusOutEvent>(OnRenameFinished);
+
+                var folderName = item.Q<Label>("colorful-hierarchy__folder-name") ?? new Label(thisGO.name[3..]) { name = "colorful-hierarchy__folder-name" };
+                folderName.style.unityFontStyleAndWeight = design.fontStyle;
+                folderName.style.unityTextAlign = design.textAlignment;
+                folderName.style.fontSize = design.fontSize;
+                folderName.style.color = design.textColor;
+                folderName.style.flexGrow = 1;
+
+                if (folderName.parent == null)
+                    nameContainer.Insert(0, folderName);
+            }
+            else if (thisGO.TryGetComponent(out ColorDesign nc))
+                Object.DestroyImmediate(nc);
+        }
+        private static void OnUnbindViewItem(HierarchyWindow window, HierarchyView view, HierarchyViewItem item)
+        {
+            if (item.Handler is not HierarchyGameObjectHandler || !System.Text.RegularExpressions.Regex.IsMatch(item.Name.text, @"\\\\ .+"))
+                return;
+
+            item.style.unityBackgroundImageTintColor = StyleKeyword.Null;
+            item.style.backgroundImage = StyleKeyword.Null;
+
+            var leftContainer = item.Q<VisualElement>(className: "hierarchy-item__left-container");
+            leftContainer.style.flexGrow = StyleKeyword.Null;
+
+            var icon = item.Q<VisualElement>(className: "hierarchy-item__icon");
+            icon.style.backgroundColor = StyleKeyword.Null;
+            icon.style.backgroundImage = StyleKeyword.Null;
+            var overlayIcon = item.Q<VisualElement>(className: "hierarchy-item__overlay-icon");
+            overlayIcon.style.backgroundColor = StyleKeyword.Null;
+            overlayIcon.style.backgroundImage = StyleKeyword.Null;
+
+            var nameContainer = item.Q<VisualElement>(className: "hierarchy-item__name");
+            nameContainer.style.flexGrow = StyleKeyword.Null;
+
+            var name = nameContainer.Q<Label>();
+            name.style.display = StyleKeyword.Null;
+
+            var folderName = item.Q<Label>("colorful-hierarchy__folder-name");
+            folderName?.parent?.Remove(folderName);
+        }
+
+        private static void OnRenameStarted(FocusInEvent evt)
+        {
+            var folder = (evt.currentTarget as VisualElement).parent.Q<Label>("colorful-hierarchy__folder-name");
+            if (folder != null)
+                folder.style.display = DisplayStyle.None;
+        }
+        private static void OnRenameFinished(FocusOutEvent evt)
+        {
+            var folder = (evt.currentTarget as VisualElement).parent.Q<Label>("colorful-hierarchy__folder-name");
+            if (folder != null)
+                folder.style.display = DisplayStyle.Flex;
+        }
+#endif
 
 #if UNITY_6000_3_OR_NEWER
         private static void OnHierarchyWindow(EntityId instanceID, Rect selectionRect)
@@ -123,13 +288,13 @@ namespace ThisSome1.ColorfulHierarchy
                 if (thisGO && !thisGO.activeInHierarchy)
                 {
                     GUI.DrawTexture(boxRect, Texture2D.whiteTexture, ScaleMode.StretchToFill, true, 1, Color.white, 0, rect.height);
-                    GUI.DrawTexture(rect, gradientTexture, ScaleMode.StretchToFill, true, rect.width / rect.height, design.backgroundColor, 0, 0);
+                    GUI.DrawTexture(rect, GradientTexture, ScaleMode.StretchToFill, true, rect.width / rect.height, design.backgroundColor, 0, 0);
                     EditorGUI.LabelField(rect, instance.name[(instance.name.IndexOf(' ') + 1)..], nameStyle);
                     EditorGUI.LabelField(boxRect, "×", new GUIStyle() { fontSize = (int)rect.height, fontStyle = FontStyle.Bold, alignment = TextAnchor.MiddleCenter, normal = new GUIStyleState() { textColor = Color.red } });
                 }
                 else
                 {
-                    GUI.DrawTexture(selectionRect, gradientTexture, ScaleMode.StretchToFill, true, rect.width / rect.height, design.backgroundColor, 0, 0);
+                    GUI.DrawTexture(selectionRect, GradientTexture, ScaleMode.StretchToFill, true, rect.width / rect.height, design.backgroundColor, 0, 0);
                     EditorGUI.LabelField(selectionRect, instance.name[(instance.name.IndexOf(' ') + 1)..], nameStyle);
                 }
             }
@@ -231,7 +396,11 @@ namespace ThisSome1.ColorfulHierarchy
         {
             static bool IsPalapalDefined()
             {
+#if UNITY_6000_3_OR_NEWER
+                foreach (var assembly in UnityEngine.Assemblies.CurrentAssemblies.GetLoadedAssemblies())
+#else
                 foreach (var assembly in System.AppDomain.CurrentDomain.GetAssemblies())
+#endif
                 {
                     if (assembly.FullName.ToLower().StartsWith("unity") || assembly.FullName.ToLower().StartsWith("system") || assembly.FullName.ToLower().StartsWith("mono")
                         || assembly.FullName.ToLower().StartsWith("bee") || assembly.FullName.ToLower().StartsWith("net") || assembly.FullName.ToLower().StartsWith("mscorlib"))
@@ -244,26 +413,7 @@ namespace ThisSome1.ColorfulHierarchy
                 return false;
             }
 
-            var asset = "";
-            var guids = AssetDatabase.FindAssets($"{typeof(FolderStructureWindow).Name} t:Script");
-            if (guids.Length > 1)
-            {
-                foreach (var guid in guids)
-                {
-                    var assetPath = AssetDatabase.GUIDToAssetPath(guid);
-                    var filename = Path.GetFileNameWithoutExtension(assetPath);
-                    if (filename == typeof(FolderStructureWindow).Name)
-                    {
-                        asset = guid;
-                        break;
-                    }
-                }
-            }
-            else if (guids.Length == 1)
-                asset = guids[0];
-
-            string dir = AssetDatabase.GUIDToAssetPath(asset);
-            dir = dir[..dir.LastIndexOf('/')];
+            string dir = PackageDirectory + "/Scripts/Editor";
             if (IsPalapalDefined() && !File.Exists(dir + "/PalapalHelper.cs"))
             {
                 File.WriteAllText(dir + "/PalapalHelper.cs", "#if UNITY_EDITOR\nusing UnityEditor;\n\nnamespace ThisSome1.ColorfulHierarchy\n{\n\tpublic class PalapalHelper\n\t{" +

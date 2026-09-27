@@ -1,11 +1,16 @@
 # Changelog
 
-## [1.3.10] - 2026-07-3
+## [1.4.0] - 2026-09-27
+
+### Added
+- Added support for new hierarchy window in unity 6000.6 and newer.
+
+## [1.3.10] - 2026-07-03
 
 ### Fixed
-- Fixed not hiding the gizmo icon of the ColorDesign component unity 6 and newer.
+- Fixed not hiding the gizmo icon of the ColorDesign component in unity 6 and newer.
 
-## [1.3.9] - 2026-07-3
+## [1.3.9] - 2026-07-03
 
 ### Fixed
 - Fixed the InstanceIDToObject obsolete in unity 6.5.

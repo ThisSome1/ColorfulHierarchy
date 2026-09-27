@@ -412,7 +412,7 @@ namespace ThisSome1.ColorfulHierarchy
                 fontSize = folderData.Design.fontSize,
                 fontStyle = folderData.Design.fontStyle,
                 alignment = folderData.Design.textAlignment,
-                normal = new GUIStyleState() { textColor = folderData.Design.textColor, background = StyleHierarchy.gradientTexture }
+                normal = new GUIStyleState() { textColor = folderData.Design.textColor, background = StyleHierarchy.GradientTexture }
             }, GUILayout.MinHeight(20)))
                 SelectFolder(path);
             var buttonStyle = new GUIStyle(GUI.skin.GetStyle("Button"))
