@@ -1,6 +1,6 @@
 {
   "name": "com.thissome1.colorful-hierarchy",
-  "version": "1.4.2",
+  "version": "1.4.3",
   "displayName": "Colorful Hierarchy",
   "description": "Paints your gameObject window with colorful folders. easy access, removed in build, can be removed in play mode too for testing and such.",
   "unity": "2022.3",
@@ -16,7 +16,7 @@
     "ColorfulHierarchy"
   ],
   "_upm": {
-    "changelog": "### Added\n\t- Fixed the folder children names randomly hiding in new hierarchy.\n"
+    "changelog": "### Fixed\n\t- Fixed the folder children active state not changing in hierarchyV2.\n\t- Fixed the hierarchy module request not acting right and the script not compiling when the hierarchy module isn't enabled.\n"
   },
   "licensesUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/LICENSE.md",
   "changelogUrl": "https://github.com/ThisSome1/ColorfulHierarchy/blob/main/CHANGELOG.md",

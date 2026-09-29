@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.4.3] - 2026-09-29
+
+### Fixed
+- Fixed the folder children active state not changing in hierarchyV2.
+- Fixed the hierarchy module request not acting right and the script not compiling when the hierarchy module isn't enabled.
+
 ## [1.4.2] - 2026-09-28
 
 ### Fixed

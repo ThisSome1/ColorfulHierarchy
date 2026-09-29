@@ -9,6 +9,7 @@ using UnityEngine;
 internal static class HierarchyModuleInstaller
 {
     const string k_PromptedKey = "ThisSome1.ColorfulHierarchy.HierarchyModulePrompted";
+    const string k_Symbol = "TS1_COLORFUL_HIERARCHY_HIERARCHY_PKG_INSTALLED";
     const string k_ModuleId = "com.unity.modules.hierarchycore";
     const string k_ModuleId2 = "com.unity.modules.hierarchy";
 
@@ -17,7 +18,10 @@ internal static class HierarchyModuleInstaller
     static HierarchyModuleInstaller()
     {
         if (ArePackagesInstalled(new[] { k_ModuleId, k_ModuleId2 }))
+        {
+            DefineSymbol();
             return;
+        }
 
         // Only ask once per project, not on every domain reload.
         if (SessionState.GetBool(k_PromptedKey, false))
@@ -52,7 +56,6 @@ internal static class HierarchyModuleInstaller
             }
         return false;
     }
-
     private static void Progress()
     {
         if (_request == null || !_request.IsCompleted || _request2 == null || !_request2.IsCompleted)
@@ -61,9 +64,19 @@ internal static class HierarchyModuleInstaller
         EditorApplication.update -= Progress;
 
         if (_request.Status == StatusCode.Success)
-            Debug.Log("[Colorful Hierarchy] Hierarchy module enabled.");
+            DefineSymbol();
         else if (_request.Status >= StatusCode.Failure)
             Debug.LogWarning($"[Colorful Hierarchy] Could not enable Hierarchy module: {_request.Error.message}");
+    }
+    private static void DefineSymbol()
+    {
+        PlayerSettings.GetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Standalone, out var defines);
+        var symbols = new List<string>(defines);
+        if (!symbols.Contains(k_Symbol))
+        {
+            symbols.Add(k_Symbol);
+            PlayerSettings.SetScriptingDefineSymbols(UnityEditor.Build.NamedBuildTarget.Standalone, symbols.ToArray());
+        }
     }
 }
 #endif

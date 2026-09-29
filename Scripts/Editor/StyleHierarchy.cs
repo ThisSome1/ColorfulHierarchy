@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEditor;
 using UnityEngine;
 using System.IO;
-#if UNITY_6000_6_OR_NEWER
+#if UNITY_6000_6_OR_NEWER && TS1_COLORFUL_HIERARCHY_HIERARCHY_PKG_INSTALLED
 using Unity.Hierarchy.Editor;
 using UnityEngine.UIElements;
 using Unity.Hierarchy;
@@ -58,7 +58,7 @@ namespace ThisSome1.ColorfulHierarchy
             CrossMarkTexture = AssetDatabase.LoadAssetAtPath<Texture2D>(PackageDirectory + "/AdditionalFiles/CrossMark.png");
 
             // Check if the color palette asset is importing.
-#if UNITY_6000_6_OR_NEWER
+#if UNITY_6000_6_OR_NEWER && TS1_COLORFUL_HIERARCHY_HIERARCHY_PKG_INSTALLED
             HierarchyWindow.BindViewItem += OnBindViewItem;
             HierarchyWindow.UnbindViewItem += OnUnbindViewItem;
 #endif
@@ -79,7 +79,7 @@ namespace ThisSome1.ColorfulHierarchy
             EditorApplication.delayCall += CreatePalapalHelper;
         }
 
-#if UNITY_6000_6_OR_NEWER
+#if UNITY_6000_6_OR_NEWER && TS1_COLORFUL_HIERARCHY_HIERARCHY_PKG_INSTALLED
         private static void OnBindViewItem(HierarchyWindow window, HierarchyView view, HierarchyViewItem item)
         {
             if (item.Handler is not HierarchyGameObjectHandler handler)
@@ -172,6 +172,7 @@ namespace ThisSome1.ColorfulHierarchy
 
             item.style.unityBackgroundImageTintColor = StyleKeyword.Null;
             item.style.backgroundImage = StyleKeyword.Null;
+            item.style.opacity = StyleKeyword.Null;
 
             var leftContainer = item.Q<VisualElement>(className: "hierarchy-item__left-container");
             leftContainer.style.flexGrow = StyleKeyword.Null;
